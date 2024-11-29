@@ -1,6 +1,6 @@
 "use strict";
 
-const { makeRequest } = require('../utils')
+const { makeRequest, mapReposFromEnv, isRepoExcluded } = require('../utils')
 
 const API_URL = "https://api.bitbucket.org/2.0";
 
@@ -83,6 +83,8 @@ class BitbucketPuller {
         console.log("Getting repo list from Bitbucket...");
 
         const results = [];
+        let exclude = mapReposFromEnv(process.env.EXCLUDE_REPOSITORIES_LIST);
+        let include = mapReposFromEnv(process.env.ONLY_INCLUDE_REPOSITORIES_LIST);
 
         let url = (
             `${API_URL}/repositories/${this.workspace}?fields=next,values.slug`
@@ -93,7 +95,15 @@ class BitbucketPuller {
             const data = await makeRequest("GET", url, this.headers);
 
             data.values.forEach(item => {
-                results.push(item.slug);
+                if (include) {
+                  if (isRepoExcluded(include, item.slug)) {
+                    results.push(item.slug);
+                  }
+                } else {
+                  if (!isRepoExcluded(exclude, item.slug)) {
+                    results.push(item.slug);
+                  }
+                }
             });
 
             url = data.next;

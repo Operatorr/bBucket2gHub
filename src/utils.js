@@ -48,6 +48,26 @@ async function makeRequest(method, url, headers, body) {
     }
 }
 
+function mapReposFromEnv(envRepoList) {
+  let exclude = {};
+
+  if (envRepoList) {
+      const repoArray = envRepoList.split(',');
+
+      exclude = repoArray.reduce((map, repoName) => {
+          map[repoName.trim()] = true; // Tags it as true
+          return map;
+      }, {});
+  } else {
+    return false;
+  }
+  return exclude;
+}
+
+function isRepoExcluded(list, repoName) {
+    return !!list[repoName];
+}
+
 module.exports = {
-    makeRequest
+    makeRequest, mapReposFromEnv, isRepoExcluded
 }
